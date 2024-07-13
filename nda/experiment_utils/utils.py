@@ -18,6 +18,7 @@ def LINE_STYLES():
 
 def multi_process_helper(device_id, task_id, opt, res_queue):
     start = time.time()
+    print(f'{opt.get_name()} started')
     log.info(f'{opt.get_name()} started')
     log.debug(f'task {task_id} started on device {device_id}')
     np.random.seed(task_id)
@@ -37,14 +38,17 @@ def multi_process_helper(device_id, task_id, opt, res_queue):
         name = opt.get_name()
 
     end = time.time()
-    log.info('%s done, total %.2fs', name, end - start)
+    print(f'{name} done, total {end - start:.2f}s')
+    log.info(f'{name} done, total {end - start:.2f}s')
     log.debug(f'task {task_id} on device {device_id} exited')
 
     res_queue.put([task_id, name, pd.DataFrame(metrics, columns=columns)])
+    print(f"Put result for task {task_id} in res_queue")
+
+
 
 
 def run_exp(exps, kappa=None, max_iter=None, name=None, save=False, plot=True, n_cpu_processes=None, n_gpus=None, processes_per_gpu=1, verbose=False):
-
     try:
         mp.set_start_method('spawn')
     except RuntimeError:
@@ -63,7 +67,7 @@ def run_exp(exps, kappa=None, max_iter=None, name=None, save=False, plot=True, n
     def _pop_queue():
         while q.empty() is False:
             res.append(q.get())
-            # print(f'{res[-1][0]} stopped')
+            print(f"Received result: {res[-1]}")
 
     def _remove_dead_process():
         for device_id in pool.keys():
@@ -85,7 +89,7 @@ def run_exp(exps, kappa=None, max_iter=None, name=None, save=False, plot=True, n
 
         if availabel_device_id > -1:
             task_id, exp = _exps.pop(0)
-            # print(f'{task_id} launched')
+            print(f"Launching task {task_id} on device {availabel_device_id}")
             pp = mp.Process(target=multi_process_helper, args=(availabel_device_id, task_id, exp, q,))
             pp.start()
             pool[availabel_device_id].append(pp)
@@ -100,6 +104,7 @@ def run_exp(exps, kappa=None, max_iter=None, name=None, save=False, plot=True, n
         time.sleep(0.1)
 
     res = [_[1:] for _ in sorted(res, key=lambda x: x[0])]
+    print(f"Final results after sorting: {res}")
 
     if save is True:
         os.system('mkdir -p data figs')
@@ -130,8 +135,10 @@ def run_exp(exps, kappa=None, max_iter=None, name=None, save=False, plot=True, n
                 fname += '_mix_1_' + name + '.txt'
 
             data.to_csv(fname, index=False)
+            print(f"Saved data to: {fname}")
 
     return res
+
 
 
 def plot_results(results, m_total, kappa=None, max_iter=None, name=None, save=False):

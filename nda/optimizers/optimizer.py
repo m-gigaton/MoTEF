@@ -75,6 +75,12 @@ class Optimizer(object):
 
     def grad(self, w, i=None, j=None):
         '''Gradient wrapper. Provide logging function.'''
+        # print(f"w:{w}")
+        # print(f"i:{i}")
+        # print(f"j:{j}")
+        # print(f"w.ndim:{w.ndim}")
+
+        # print(type(self.grad_h(w, i=i, j=j)), type(self.grad_g(w)))
 
         return self.grad_h(w, i=i, j=j) + self.grad_g(w)
 
@@ -83,6 +89,11 @@ class Optimizer(object):
 
     def grad_h(self, w, i=None, j=None):
         '''Gradient wrapper. Provide logging function.'''
+
+        # print(f"self.n_grads before: {self.n_grads}")
+        # print(f"self.p.m_total: {self.p.m_total}")
+        # print(f"self.p.m: {self.p.m}")
+        # print(f"j: {j}")
 
         if w.ndim == 1:
             if i is None and j is None:
@@ -95,7 +106,10 @@ class Optimizer(object):
                 self.n_grads += len(j)
         elif w.ndim == 2:
             if j is None:
+                # print(f"n_grads before:{self.n_grads}")
+                # print(f"self.p.m_total:{self.p.m_total}")
                 self.n_grads += self.p.m_total  # Works for agents is list or integer
+                # print(f"n_grads after:{self.n_grads}")
             elif j is not None:
                 if type(j) is xp.ndarray:
                     self.n_grads += j.size
@@ -105,6 +119,8 @@ class Optimizer(object):
                     raise NotImplementedError
         else:
             raise NotImplementedError
+        
+        # print(f"self.n_grads after: {self.n_grads}")
 
         return self.p.grad_h(w, i=i, j=j)
 
@@ -174,6 +190,7 @@ class Optimizer(object):
         self.save_metrics()
 
         for self.t in range(1, self.n_iters + 1):
+            print(f"Current iteration: {self.t}")
 
             # The actual update step for optimization variable
             self.update()
